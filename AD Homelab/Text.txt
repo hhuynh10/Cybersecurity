@@ -1,0 +1,101 @@
+1. Install Oracle VirtualBox
+Download VirtualBox: Go to the VirtualBox website and download the appropriate version for your operating system (Windows, macOS, etc.).
+Install VirtualBox: Run the installer and follow the prompts to install VirtualBox on your computer.
+Download the Extension Pack: After installing VirtualBox, download the Extension Pack from the same website. Install it by opening VirtualBox, going to File > Preferences > Extensions, and adding the downloaded pack.
+2. Download Windows 10 and Server 2019 ISOs
+Download Windows 10 ISO: Visit the official Microsoft website to download the Windows 10 ISO. Choose your edition, language, and confirm the download. Select 64-bit, and save the ISO file to a known location on your computer.
+Download Server 2019 ISO: Go to the Microsoft Evaluation Center, select Windows Server 2019, choose the ISO option, and download it. You may need to log in or register to complete the download.
+3. Create a Virtual Machine for the Domain Controller
+Open VirtualBox: Launch VirtualBox.
+Create New VM: Click on New to create a new virtual machine.
+Name the VM: Name it "DC" (Domain Controller).
+Choose Type and Version: Select Microsoft Windows and Windows 2019 (64-bit).
+Memory Allocation: Allocate at least 2048 MB (2 GB) of RAM. If you have more resources, allocate more.
+Create Virtual Hard Disk: Follow the default settings to create a virtual hard disk for the VM.
+Adjust Settings:
+Go to Settings > General > Advanced: Set Shared Clipboard and Drag and Drop to Bidirectional.
+Go to System > Processor: Allocate more CPU cores if available.
+Go to Network:
+Ensure the first adapter is set to NAT (for internet access).
+Add a second network adapter and set it to Internal Network (for private communication between VMs).
+4. Install Server 2019 on the Domain Controller VM
+Start the VM: Double-click the VM or select it and click Start.
+Select Server 2019 ISO: When prompted, browse to and select the downloaded Server 2019 ISO.
+Begin Installation: Follow the installation prompts:
+Select Standard (Desktop Experience).
+Accept license terms.
+Choose Custom installation and select the virtual hard disk created earlier.
+Wait for Installation: The process will take some time, and the VM will restart multiple times. Do not press any keys when prompted during reboots.
+5. Initial Configuration of the Server
+Set Password for Administrator: When prompted, set a password (Password1 recommended for consistency).
+Log in: Use Ctrl+Alt+Delete (from the VirtualBox menu) to log in using the password you just set.
+Install Guest Additions:
+Go to Devices > Insert Guest Additions CD Image.
+Open File Explorer in the VM, go to This PC, and run VBoxWindowsAdditions-amd64.
+Follow the installation prompts and choose to reboot later.
+Shut Down and Restart the VM: Shut down the VM completely, then restart it to apply changes.
+6. Network Configuration
+Open Network Settings: In the VM, click the network icon and select Network & Internet Settings.
+Identify Network Adapters:
+Go to Change Adapter Options.
+Check each adapter to identify which is connected to the internet (e.g., an IP like 192.168.x.x) and which is the internal network (likely showing a 169.254.x.x IP).
+Rename them for clarity (e.g., Internet for the external adapter and Internal for the internal one).
+Set Static IP for Internal Adapter:
+Go to the properties of the internal adapter, select Internet Protocol Version 4 (TCP/IPv4), and set the following:
+IP address: 172.16.0.1
+Subnet mask: 255.255.255.0
+DNS server: 127.0.0.1 (loopback address)
+7. Rename the Server
+Rename the Computer: Right-click the Start menu, select System, and click Rename this PC.
+Change the name to "DC": Restart the computer to apply changes.
+8. Install Active Directory Domain Services (AD DS)
+Open Server Manager: Click on Add roles and features.
+Select Active Directory Domain Services: Follow the prompts to install AD DS.
+Promote to Domain Controller:
+Click the flag in Server Manager with the warning icon.
+Select Promote this server to a domain controller.
+Choose Add a new forest and set the domain name to mydomain.com.
+Follow the prompts, setting a DSRM password (Password1).
+Click Next through the remaining steps and install. The server will restart.
+9. Create a Domain Admin Account
+Log in to the Domain: Use the domain mydomain\administrator and password (Password1).
+Open Active Directory Users and Computers:
+Navigate to Start > Administrative Tools > Active Directory Users and Computers.
+Create an Organizational Unit (OU):
+Right-click mydomain.com, select New > Organizational Unit, and name it MyAdmins.
+Create a New User:
+Inside MyAdmins, right-click and select New > User.
+Name the user (e.g., "Josh Matacor") and set the username (e.g., a-jmatacor).
+Set a password (Password1) and uncheck "User must change password at next logon".
+Make the User a Domain Admin:
+Right-click the new user, select Properties, go to Member Of, and add Domain Admins.
+10. Install Routing and Remote Access (NAT)
+Open Server Manager: Click Add roles and features.
+Install Remote Access: Select Remote Access and proceed with the installation.
+Configure Routing:
+Go to Tools > Routing and Remote Access.
+Right-click the server and select Configure and Enable Routing and Remote Access.
+Choose NAT and select the Internet adapter as the public interface connected to the internet.
+11. Set Up DHCP
+Open Server Manager: Go to Add roles and features.
+Install DHCP: Select DHCP Server and follow the prompts.
+Configure DHCP:
+Go to Tools > DHCP.
+Right-click the server, select New Scope, and set the scope:
+IP range: 172.16.0.100 to 172.16.0.200
+Subnet mask: 255.255.255.0
+Configure additional options:
+Router: 172.16.0.1
+DNS Server: 172.16.0.1
+Activate the scope and authorize the DHCP server.
+12. Create a Client VM (Windows 10)
+Create a New VM: In VirtualBox, create a new VM for Windows 10.
+Install Windows 10: Follow similar steps as with Server 2019 to install Windows 10 on this VM.
+Connect to Internal Network: Ensure the VM’s network adapter is set to Internal Network.
+Join the Domain:
+After installing Windows 10, go to Settings > About and click Join a Domain.
+Enter the domain name mydomain.com, and use the domain admin account created earlier to join the domain.
+Restart and Log In: Restart the VM and log in with one of the domain user accounts.
+13. Final Configuration and Testing
+Test Connectivity: Ensure the Windows 10 client can connect to the internet and the domain controller.
+Verify AD Functionality: Test domain logins and ensure the DHCP server is assigning IP addresses correctly.
